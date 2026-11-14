@@ -1,5 +1,5 @@
 --========================================================
--- EV03 CONTROL V3.8 - EXECUTOR STANDALONE EDITION
+-- EV03 CONTROL V3.8 - EXECUTOR STANDALONE EDITION (FULL HOTKEYS)
 -- Creator: 阿叶ev03
 -- Location: Standalone Executor Script (Client-Side)
 --========================================================
@@ -12,10 +12,7 @@ local CoreGui = game:GetService("CoreGui")
 local LP = Players.LocalPlayer
 if not LP then return end
 
--- 获取安全的 UI 父容器（优先使用 CoreGui，若执行器不支持则退回到 PlayerGui）
-local successGui, parentGui = pcall(function()
-	return CoreGui
-end)
+local successGui, parentGui = pcall(function() return CoreGui end)
 if not successGui or not parentGui then
 	parentGui = LP:WaitForChild("PlayerGui", 10)
 end
@@ -50,38 +47,26 @@ local C = {
 }
 
 local function validNumber(n)
-	return typeof(n) == "number"
-		and n == n
-		and n ~= math.huge
-		and n ~= -math.huge
+	return typeof(n) == "number" and n == n and n ~= math.huge and n ~= -math.huge
 end
 
 local function create(className, props, parent)
 	local obj = Instance.new(className)
 	for key, value in pairs(props or {}) do
-		pcall(function()
-			obj[key] = value
-		end)
+		pcall(function() obj[key] = value end)
 	end
-	pcall(function()
-		obj.Parent = parent
-	end)
+	pcall(function() obj.Parent = parent end)
 	return obj
 end
 
 --========================================================
--- WINDOW SIZE
+-- WINDOW SIZE & GUI CREATION
 --========================================================
 
 local camera = workspace.CurrentCamera
 local viewport = camera and camera.ViewportSize or Vector2.new(1280, 720)
-
 local windowWidth = math.floor(math.clamp(viewport.X - 30, 560, 900))
 local windowHeight = math.floor(math.clamp(viewport.Y - 40, 440, 680))
-
---========================================================
--- GUI
---========================================================
 
 local gui = create("ScreenGui", {
 	Name = "EV03_CONTROL",
@@ -111,10 +96,7 @@ local main = create("Frame", {
 create("UICorner", {CornerRadius = UDim.new(0, 11)}, main)
 create("UIStroke", {Color = C.RED, Thickness = 2}, main)
 
---========================================================
--- HEADER
---========================================================
-
+-- Header
 local header = create("Frame", {
 	Size = UDim2.new(1, 0, 0, 58),
 	BackgroundColor3 = C.SIDEBAR,
@@ -144,7 +126,7 @@ create("TextLabel", {
 	Size = UDim2.new(1, -20, 0, 15),
 	Position = UDim2.fromOffset(16, 34),
 	BackgroundTransparency = 1,
-	Text = "STANDALONE EXECUTOR EDITION // V3.8",
+	Text = "STANDALONE FULL HOTKEYS // V3.8",
 	TextColor3 = C.GRAY,
 	TextSize = 9,
 	Font = Enum.Font.Code,
@@ -162,17 +144,12 @@ local function headerButton(text, offset)
 		Font = Enum.Font.GothamBold,
 		BorderSizePixel = 0,
 	}, header)
-
 	create("UICorner", {CornerRadius = UDim.new(0, 6)}, button)
 	return button
 end
 
 local minimizeButton = headerButton("—", -88)
 local closeButton = headerButton("×", -45)
-
---========================================================
--- MAIN BODY
---========================================================
 
 local body = create("Frame", {
 	Position = UDim2.fromOffset(0, 58),
@@ -298,10 +275,6 @@ local function createSection(parent, title, height)
 	return card
 end
 
---========================================================
--- BUTTON & INPUT HELPERS
---========================================================
-
 local function makeButton(parent, text, x, y, width, height, callback)
 	local button = create("TextButton", {
 		Size = UDim2.new(width, 0, 0, height),
@@ -316,7 +289,6 @@ local function makeButton(parent, text, x, y, width, height, callback)
 	}, parent)
 
 	create("UICorner", {CornerRadius = UDim.new(0, 6)}, button)
-
 	button.MouseButton1Click:Connect(function()
 		local ok, err = pcall(callback)
 		if not ok then
@@ -324,7 +296,6 @@ local function makeButton(parent, text, x, y, width, height, callback)
 			setStatus("LOCAL ACTION ERROR", C.RED)
 		end
 	end)
-
 	return button
 end
 
@@ -355,14 +326,8 @@ local function makeToggle(parent, title, y, callback)
 		local desired = value == true
 		if not silent then
 			local ok, result = pcall(callback, desired)
-			if not ok then
-				warn("[EV03 TOGGLE ERROR]", result)
-				desired = false
-			elseif result == false then
-				desired = false
-			end
+			if not ok then desired = false elseif result == false then desired = false end
 		end
-
 		active = desired
 		button.Text = title .. (active and "  //  ON" or "  //  OFF")
 		button.BackgroundColor3 = active and C.GREEN or C.DARK_RED
@@ -375,10 +340,6 @@ local function makeToggle(parent, title, y, callback)
 
 	return button, setState
 end
-
---========================================================
--- NAVIGATION
---========================================================
 
 local function addNavigation(name, label, symbol)
 	local button = create("TextButton", {
@@ -395,17 +356,14 @@ local function addNavigation(name, label, symbol)
 	navButtons[name] = button
 
 	button.MouseButton1Click:Connect(function()
-		for pageName, page in pairs(pages) do
-			page.Visible = pageName == name
-		end
+		for pageName, page in pairs(pages) do page.Visible = (pageName == name) end
 		for pageName, nav in pairs(navButtons) do
-			local selected = pageName == name
+			local selected = (pageName == name)
 			nav.BackgroundColor3 = selected and C.DARK_RED or C.SIDEBAR
 			nav.TextColor3 = selected and C.WHITE or C.GRAY
 		end
 		setStatus("PAGE: " .. name)
 	end)
-
 	return button
 end
 
@@ -424,32 +382,23 @@ addNavigation("HOTKEYS", "Hotkeys", "⌨")
 addNavigation("ABOUT", "About", "ⓘ")
 
 --========================================================
--- HELPER UTILITIES: CHARACTER PARTS & TARGET FINDER
+-- CORE UTILITIES & LOGIC
 --========================================================
 
 local function getParts(player)
 	player = player or LP
-	if not player or not player.Character then
-		return nil, nil, nil
-	end
+	if not player or not player.Character then return nil, nil, nil end
 	local character = player.Character
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local root = character:FindFirstChild("HumanoidRootPart")
-
-	if not humanoid or not root or humanoid.Health <= 0 then
-		return nil, nil, nil
-	end
+	if not humanoid or not root or humanoid.Health <= 0 then return nil, nil, nil end
 	return character, humanoid, root
 end
 
 local function findTarget(prefix)
-	if typeof(prefix) ~= "string" then
-		return nil, "INVALID USERNAME"
-	end
+	if typeof(prefix) ~= "string" then return nil, "INVALID USERNAME" end
 	prefix = prefix:match("^%s*(.-)%s*$")
-	if not prefix or prefix == "" or #prefix > 20 then
-		return nil, "INVALID USERNAME"
-	end
+	if not prefix or prefix == "" or #prefix > 20 then return nil, "INVALID USERNAME" end
 
 	local needle = prefix:lower()
 	local exactMatch = nil
@@ -457,13 +406,8 @@ local function findTarget(prefix)
 
 	for _, player in ipairs(Players:GetPlayers()) do
 		local username = player.Name:lower()
-		if username == needle then
-			exactMatch = player
-			break
-		end
-		if username:sub(1, #needle) == needle then
-			table.insert(matches, player)
-		end
+		if username == needle then exactMatch = player break end
+		if username:sub(1, #needle) == needle then table.insert(matches, player) end
 	end
 
 	if exactMatch then return exactMatch end
@@ -471,28 +415,17 @@ local function findTarget(prefix)
 	if #matches == 0 then return nil, "PLAYER NOT FOUND" end
 
 	local names = {}
-	for index = 1, math.min(#matches, 5) do
-		table.insert(names, matches[index].Name)
-	end
+	for index = 1, math.min(#matches, 5) do table.insert(names, matches[index].Name) end
 	local suffix = #matches > 5 and " ..." or ""
 	return nil, "MULTIPLE MATCHES: " .. table.concat(names, ", ") .. suffix
 end
 
---========================================================
--- CORE CLIENT-SIDE LOGIC (NOCLIP, INVISIBLE, FLING, TELEPORT)
---========================================================
-
--- 1. NOCLIP
+-- Noclip
 local localNoclipEnabled = false
 local noclipConnection = nil
-
 local function setLocalNoclip(state)
 	localNoclipEnabled = state
-	if noclipConnection then
-		pcall(function() noclipConnection:Disconnect() end)
-		noclipConnection = nil
-	end
-
+	if noclipConnection then pcall(function() noclipConnection:Disconnect() end) noclipConnection = nil end
 	if state then
 		noclipConnection = RunService.PreSimulation:Connect(function()
 			if not localNoclipEnabled then return end
@@ -500,22 +433,18 @@ local function setLocalNoclip(state)
 				local character = LP.Character
 				if character then
 					for _, part in ipairs(character:GetDescendants()) do
-						if part:IsA("BasePart") then
-							part.CanCollide = false
-						end
+						if part:IsA("BasePart") then part.CanCollide = false end
 					end
 				end
 			end)
 		end)
-		setStatus("NOCLIP ENABLED (CLIENT)", C.GREEN)
+		setStatus("NOCLIP ENABLED", C.GREEN)
 	else
 		pcall(function()
 			local character = LP.Character
 			if character then
 				for _, part in ipairs(character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanCollide = true
-					end
+					if part:IsA("BasePart") then part.CanCollide = true end
 				end
 			end
 		end)
@@ -524,18 +453,15 @@ local function setLocalNoclip(state)
 	return true
 end
 
--- 2. INVISIBILITY
+-- Invisibility
 local localInvisibleEnabled = false
 local invisibleConnections = {}
-
 local function setLocalInvisible(state)
 	localInvisibleEnabled = state
-	for _, conn in ipairs(invisibleConnections) do
-		pcall(function() conn:Disconnect() end)
-	end
+	for _, conn in ipairs(invisibleConnections) do pcall(function() conn:Disconnect() end) end
 	invisibleConnections = {}
 
-	local character, humanoid, root = getParts(LP)
+	local character, humanoid = getParts(LP)
 	if not character then return false end
 
 	if state then
@@ -544,33 +470,20 @@ local function setLocalInvisible(state)
 			for _, obj in ipairs(character:GetDescendants()) do
 				if obj:IsA("BasePart") or obj:IsA("Decal") or obj:IsA("Texture") then
 					obj.Transparency = 1
-				elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") or obj:IsA("Highlight") then
-					if obj:IsA("Highlight") then
-						obj.Enabled = false
-					else
-						obj.Transparency = 1
-					end
+				elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Beam") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("BillboardGui") or obj:IsA("SurfaceGui") then
+					obj.Transparency = 1
+				elseif obj:IsA("Highlight") then
+					obj.Enabled = false
 				end
 			end
-			table.insert(invisibleConnections, character.DescendantAdded:Connect(function(obj)
-				if not localInvisibleEnabled then return end
-				pcall(function()
-					if obj:IsA("BasePart") or obj:IsA("Decal") or obj:IsA("Texture") then
-						obj.Transparency = 1
-					end
-				end)
-			end))
 		end)
-		setStatus("INVISIBILITY ENABLED (CLIENT)", C.GREEN)
+		setStatus("INVISIBILITY ENABLED", C.GREEN)
 	else
 		pcall(function()
 			humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
 			for _, obj in ipairs(character:GetDescendants()) do
-				if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
-					obj.Transparency = 0
-				elseif obj:IsA("Decal") or obj:IsA("Texture") then
-					obj.Transparency = 0
-				end
+				if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then obj.Transparency = 0
+				elseif obj:IsA("Decal") or obj:IsA("Texture") then obj.Transparency = 0 end
 			end
 		end)
 		setStatus("INVISIBILITY DISABLED", C.RED)
@@ -578,65 +491,35 @@ local function setLocalInvisible(state)
 	return true
 end
 
--- 3. TELEPORT TARGET
+-- Teleport & Fling
 local function clientTeleport(targetName)
 	local target, err = findTarget(targetName)
-	if not target then
-		setStatus(err or "PLAYER NOT FOUND", C.RED)
-		return
-	end
-	if target == LP then
-		setStatus("CANNOT TARGET YOURSELF", C.RED)
-		return
-	end
-
+	if not target then setStatus(err or "PLAYER NOT FOUND", C.RED) return end
+	if target == LP then setStatus("CANNOT TARGET YOURSELF", C.RED) return end
 	local _, _, adminRoot = getParts(LP)
 	local tChar, _, tRoot = getParts(target)
-	if not adminRoot or not tChar or not tRoot then
-		setStatus("CHARACTER NOT READY", C.RED)
-		return
-	end
-
-	local ok = pcall(function()
-		LP.Character:PivotTo(tRoot.CFrame * CFrame.new(3, 0, 3))
-	end)
-
-	if ok then
-		setStatus("TELEPORTED TO: " .. target.Name, C.GREEN)
-	else
-		setStatus("TELEPORT FAILED", C.RED)
-	end
+	if not adminRoot or not tChar or not tRoot then setStatus("CHARACTER NOT READY", C.RED) return end
+	local ok = pcall(function() LP.Character:PivotTo(tRoot.CFrame * CFrame.new(3, 0, 3)) end)
+	if ok then setStatus("TELEPORTED TO: " .. target.Name, C.GREEN) else setStatus("TELEPORT FAILED", C.RED) end
 end
 
--- 4. FLING TARGET / ALL (Client-side Physics Fling)
 local activeFling = false
-
 local function clientFling(targetsTable, power)
-	if activeFling then
-		setStatus("FLING ALREADY ACTIVE", C.RED)
-		return
-	end
+	if activeFling then setStatus("FLING ALREADY ACTIVE", C.RED) return end
 	power = math.clamp(tonumber(power) or 10, 1, 10)
-
 	local character, humanoid, root = getParts(LP)
-	if not character or not root then
-		setStatus("CHARACTER NOT READY", C.RED)
-		return
-	end
+	if not character or not root then setStatus("CHARACTER NOT READY", C.RED) return end
 
 	activeFling = true
 	task.spawn(function()
 		pcall(function()
 			local oldPos = root.CFrame
 			humanoid.AutoRotate = false
-
-			-- 附加高速旋转与定位器
 			local att = Instance.new("Attachment", root)
 			local vel = Instance.new("LinearVelocity", root)
 			vel.Attachment0 = att
 			vel.MaxForce = math.huge
 			vel.VectorVelocity = Vector3.new(0, 50 + power * 20, 0)
-
 			local ang = Instance.new("AngularVelocity", root)
 			ang.Attachment0 = att
 			ang.MaxTorque = math.huge
@@ -644,7 +527,7 @@ local function clientFling(targetsTable, power)
 
 			for _, target in ipairs(targetsTable) do
 				if target and target ~= LP then
-					local tChar, _, tRoot = getParts(target)
+					local _, _, tRoot = getParts(target)
 					if tRoot then
 						local startTime = os.clock()
 						while os.clock() - startTime < 0.4 and tRoot.Parent and root.Parent do
@@ -654,13 +537,7 @@ local function clientFling(targetsTable, power)
 					end
 				end
 			end
-
-			pcall(function()
-				vel:Destroy()
-				ang:Destroy()
-				att:Destroy()
-			end)
-
+			pcall(function() vel:Destroy() ang:Destroy() att:Destroy() end)
 			humanoid.AutoRotate = true
 			character:PivotTo(oldPos)
 			root.AssemblyLinearVelocity = Vector3.zero
@@ -671,11 +548,11 @@ local function clientFling(targetsTable, power)
 end
 
 --========================================================
--- DASHBOARD PAGE
+-- UI PAGES CONTENT
 --========================================================
 
+-- Dashboard
 local dashboardCard = createSection(dashboardPage, "EV03 // DASHBOARD", 160)
-
 create("TextLabel", {
 	Size = UDim2.new(1, -28, 0, 35),
 	Position = UDim2.fromOffset(14, 40),
@@ -686,12 +563,11 @@ create("TextLabel", {
 	Font = Enum.Font.GothamBlack,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, dashboardCard)
-
 create("TextLabel", {
 	Size = UDim2.new(1, -28, 0, 70),
 	Position = UDim2.fromOffset(14, 82),
 	BackgroundTransparency = 1,
-	Text = "Creator: 阿叶ev03\nVersion: V3.8\nStandalone Executor Edition (Client-Side)",
+	Text = "Creator: 阿叶ev03\nVersion: V3.8\nStandalone Full Hotkeys Edition",
 	TextColor3 = C.GRAY,
 	TextSize = 12,
 	Font = Enum.Font.Gotham,
@@ -699,17 +575,9 @@ create("TextLabel", {
 	TextYAlignment = Enum.TextYAlignment.Top,
 }, dashboardCard)
 
---========================================================
--- PLAYER PAGE
---========================================================
-
+-- Player Page
 local playerCard = createSection(playerPage, "PLAYER // MANAGEMENT", 205)
-local targetInput = makeInput(
-	playerCard,
-	"Enter exact Roblox Username...",
-	0, 39, 1, 36, ""
-)
-
+local targetInput = makeInput(playerCard, "Enter exact Roblox Username...", 0, 39, 1, 36, "")
 local flingPower = 10
 
 create("TextLabel", {
@@ -735,32 +603,18 @@ local flingPowerLabel = create("TextLabel", {
 }, playerCard)
 create("UICorner", {CornerRadius = UDim.new(0, 6)}, flingPowerLabel)
 
-local function updateFlingPower(delta)
-	flingPower = math.clamp(flingPower + delta, 1, 10)
+makeButton(playerCard, "−", 0.49, 82, 0.1, 32, function()
+	flingPower = math.clamp(flingPower - 1, 1, 10)
 	flingPowerLabel.Text = tostring(flingPower)
-end
-
-makeButton(playerCard, "−", 0.49, 82, 0.1, 32, function() updateFlingPower(-1) end)
-makeButton(playerCard, "+", 0.61, 82, 0.1, 32, function() updateFlingPower(1) end)
-
-create("TextLabel", {
-	Size = UDim2.new(0.27, -4, 0, 30),
-	Position = UDim2.new(0.73, 4, 0, 83),
-	BackgroundTransparency = 1,
-	Text = "数值越大，转速和击飞力越强",
-	TextColor3 = C.GRAY,
-	TextSize = 9,
-	Font = Enum.Font.Gotham,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	TextWrapped = true,
-}, playerCard)
+end)
+makeButton(playerCard, "+", 0.61, 82, 0.1, 32, function()
+	flingPower = math.clamp(flingPower + 1, 1, 10)
+	flingPowerLabel.Text = tostring(flingPower)
+end)
 
 local function getTargetInputName()
 	local name = targetInput.Text:match("^%s*(.-)%s*$")
-	if not name or name == "" then
-		setStatus("PLEASE ENTER USERNAME", C.RED)
-		return nil
-	end
+	if not name or name == "" then setStatus("PLEASE ENTER USERNAME", C.RED) return nil end
 	return name
 end
 
@@ -768,79 +622,51 @@ makeButton(playerCard, "TELEPORT TO ME", 0, 145, 0.32, 40, function()
 	local name = getTargetInputName()
 	if name then clientTeleport(name) end
 end)
-
 makeButton(playerCard, "FLING TARGET", 0.34, 145, 0.32, 40, function()
 	local name = getTargetInputName()
 	if name then
 		local target, err = findTarget(name)
-		if target then
-			clientFling({target}, flingPower)
-		else
-			setStatus(err or "PLAYER NOT FOUND", C.RED)
-		end
+		if target then clientFling({target}, flingPower) else setStatus(err or "PLAYER NOT FOUND", C.RED) end
 	end
 end)
-
 makeButton(playerCard, "FLING ALL", 0.68, 145, 0.32, 40, function()
 	local all = {}
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p ~= LP then table.insert(all, p) end
-	end
+	for _, p in ipairs(Players:GetPlayers()) do if p ~= LP then table.insert(all, p) end end
 	clientFling(all, flingPower)
 end)
 
---========================================================
--- MOVEMENT PAGE & CAMERA FLY ENGINE
---========================================================
-
+-- Movement Page
 local movementCard = createSection(movementPage, "MOVEMENT // CAMERA FLY / SPEED / NOCLIP", 365)
-
 local infiniteJump = false
 local setJumpState
-jumpButton = makeToggle(movementCard, "INFINITE JUMP", 42, function(state)
-	infiniteJump = state
-	return true
-end)
+makeToggle(movementCard, "INFINITE JUMP", 42, function(state) infiniteJump = state return true end)
 
 local walkInput = makeInput(movementCard, "Walk speed (finite number)", 0, 91, 0.62, 36, "32")
-makeButton(movementCard, "APPLY WALK SPEED", 0.65, 91, 0.35, 36, function()
+local function applyWalkSpeed()
 	local speed = tonumber(walkInput.Text)
-	if not validNumber(speed) or speed < 0 then
-		setStatus("INVALID WALK SPEED", C.RED)
-		return
-	end
+	if not validNumber(speed) or speed < 0 then setStatus("INVALID WALK SPEED", C.RED) return end
 	local _, humanoid = getParts(LP)
-	if humanoid then
-		humanoid.WalkSpeed = speed
-		setStatus("WALK SPEED: " .. tostring(speed), C.GREEN)
-	end
-end)
+	if humanoid then humanoid.WalkSpeed = speed setStatus("WALK SPEED: " .. tostring(speed), C.GREEN) end
+end
+makeButton(movementCard, "APPLY WALK SPEED", 0.65, 91, 0.35, 36, applyWalkSpeed)
 
 local flySpeed = 80
 local flyInput = makeInput(movementCard, "Fly speed (finite number)", 0, 141, 0.62, 36, "80")
-makeButton(movementCard, "APPLY FLY SPEED", 0.65, 141, 0.35, 36, function()
+local function applyFlySpeed()
 	local speed = tonumber(flyInput.Text)
-	if not validNumber(speed) or speed < 0 then
-		setStatus("INVALID FLY SPEED", C.RED)
-		return
-	end
+	if not validNumber(speed) or speed < 0 then setStatus("INVALID FLY SPEED", C.RED) return end
 	flySpeed = speed
 	setStatus("FLY SPEED: " .. tostring(speed), C.GREEN)
-end)
+end
+makeButton(movementCard, "APPLY FLY SPEED", 0.65, 141, 0.35, 36, applyFlySpeed)
 
--- Camera Fly Implementation
+-- Camera Fly
 local flyEnabled = false
-local flyAttachment, flyVelocity, flyOrientation, flyConnection
-local flyHumanoid, oldAutoRotate
+local flyAttachment, flyVelocity, flyOrientation, flyConnection, flyHumanoid, oldAutoRotate
 
 local function cleanupFly()
-	if flyConnection then
-		pcall(function() flyConnection:Disconnect() end)
-		flyConnection = nil
-	end
-	for _, obj in ipairs({flyVelocity, flyOrientation, flyAttachment}) do
-		if obj then pcall(function() obj:Destroy() end) end
-	end
+	if flyConnection then pcall(function() flyConnection:Disconnect() end) flyConnection = nil end
+	for _, obj in ipairs({flyVelocity, flyOrientation, flyAttachment}) do if obj then pcall(function() obj:Destroy() end) end end
 	flyVelocity, flyOrientation, flyAttachment = nil, nil, nil
 	if flyHumanoid and flyHumanoid.Parent then
 		pcall(function()
@@ -854,9 +680,7 @@ end
 local function getBodyForward(root, cameraCFrame)
 	local look = cameraCFrame.LookVector
 	local flat = Vector3.new(look.X, 0, look.Z)
-	if flat.Magnitude < 0.001 then
-		flat = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z)
-	end
+	if flat.Magnitude < 0.001 then flat = Vector3.new(root.CFrame.LookVector.X, 0, root.CFrame.LookVector.Z) end
 	if flat.Magnitude < 0.001 then flat = Vector3.new(0, 0, -1) end
 	return flat.Unit
 end
@@ -865,12 +689,9 @@ local function setupFly()
 	cleanupFly()
 	local character, humanoid, root = getParts(LP)
 	if not character then return false end
-
 	local success = pcall(function()
 		root.AssemblyAngularVelocity = Vector3.zero
-		flyAttachment = Instance.new("Attachment", root)
-		flyAttachment.Name = "EV03_FlyAttachment"
-
+		flyAttachment = Instance.new("Attachment", root, "EV03_FlyAttachment")
 		flyVelocity = Instance.new("LinearVelocity", root)
 		flyVelocity.Name = "EV03_FlyVelocity"
 		flyVelocity.Attachment0 = flyAttachment
@@ -886,53 +707,38 @@ local function setupFly()
 		flyOrientation.RigidityEnabled = true
 		flyOrientation.Responsiveness = 200
 		flyOrientation.MaxTorque = 1000000000
-		flyOrientation.MaxAngularVelocity = 1000000
 
 		local cam = workspace.CurrentCamera
-		local bodyForward = getBodyForward(root, cam and cam.CFrame or root.CFrame)
-		flyOrientation.CFrame = CFrame.lookAt(Vector3.zero, bodyForward, Vector3.yAxis)
-
+		flyOrientation.CFrame = CFrame.lookAt(Vector3.zero, getBodyForward(root, cam and cam.CFrame or root.CFrame), Vector3.yAxis)
 		flyHumanoid = humanoid
 		oldAutoRotate = humanoid.AutoRotate
 		humanoid.AutoRotate = false
 		humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
 	end)
-
-	if not success then
-		cleanupFly()
-		return false
-	end
+	if not success then cleanupFly() return false end
 
 	flyConnection = RunService.PreSimulation:Connect(function()
 		if not flyEnabled then return end
-		local currentCamera = workspace.CurrentCamera
-		if not currentCamera then return end
-
-		local cameraCFrame = currentCamera.CFrame
-		local cameraForward = cameraCFrame.LookVector.Unit
-		local cameraRight = Vector3.new(cameraCFrame.RightVector.X, 0, cameraCFrame.RightVector.Z)
-		if cameraRight.Magnitude > 0.001 then cameraRight = cameraRight.Unit else cameraRight = Vector3.new(1, 0, 0) end
-
-		pcall(function()
-			flyOrientation.CFrame = CFrame.lookAt(Vector3.zero, getBodyForward(root, cameraCFrame), Vector3.yAxis)
-		end)
+		local cam = workspace.CurrentCamera
+		if not cam then return end
+		local ccf = cam.CFrame
+		local cf = ccf.LookVector.Unit
+		local cr = Vector3.new(ccf.RightVector.X, 0, ccf.RightVector.Z)
+		cr = cr.Magnitude > 0.001 and cr.Unit or Vector3.new(1, 0, 0)
+		pcall(function() flyOrientation.CFrame = CFrame.lookAt(Vector3.zero, getBodyForward(root, ccf), Vector3.yAxis) end)
 
 		local movement = Vector3.zero
 		if not UIS:GetFocusedTextBox() then
-			if UIS:IsKeyDown(Enum.KeyCode.W) then movement += cameraForward end
-			if UIS:IsKeyDown(Enum.KeyCode.S) then movement -= cameraForward end
-			if UIS:IsKeyDown(Enum.KeyCode.A) then movement -= cameraRight end
-			if UIS:IsKeyDown(Enum.KeyCode.D) then movement += cameraRight end
+			if UIS:IsKeyDown(Enum.KeyCode.W) then movement += cf end
+			if UIS:IsKeyDown(Enum.KeyCode.S) then movement -= cf end
+			if UIS:IsKeyDown(Enum.KeyCode.A) then movement -= cr end
+			if UIS:IsKeyDown(Enum.KeyCode.D) then movement += cr end
 			if UIS:IsKeyDown(Enum.KeyCode.Space) then movement += Vector3.yAxis end
 			if UIS:IsKeyDown(Enum.KeyCode.LeftControl) or UIS:IsKeyDown(Enum.KeyCode.RightControl) then movement -= Vector3.yAxis end
 		end
-
 		if movement.Magnitude > 1 then movement = movement.Unit end
-		pcall(function()
-			flyVelocity.VectorVelocity = movement * flySpeed
-		end)
+		pcall(function() flyVelocity.VectorVelocity = movement * flySpeed end)
 	end)
-
 	return true
 end
 
@@ -940,11 +746,7 @@ local setFlyState
 makeToggle(movementCard, "CAMERA FLY", 191, function(state)
 	flyEnabled = state
 	if state then
-		if not setupFly() then
-			flyEnabled = false
-			setStatus("FLY INIT FAILED", C.RED)
-			return false
-		end
+		if not setupFly() then flyEnabled = false setStatus("FLY INIT FAILED", C.RED) return false end
 		setStatus("CAMERA FLY ENABLED", C.GREEN)
 	else
 		cleanupFly()
@@ -954,56 +756,40 @@ makeToggle(movementCard, "CAMERA FLY", 191, function(state)
 end)
 
 local setNoclipState
-makeToggle(movementCard, "NOCLIP / 穿墙", 241, function(state)
-	setLocalNoclip(state)
-	return true
-end)
+makeToggle(movementCard, "NOCLIP / 穿墙", 241, function(state) setLocalNoclip(state) return true end)
 
 local setInvisibleState
-makeToggle(movementCard, "INVISIBILITY / 隐身", 291, function(state)
-	setLocalInvisible(state)
-	return true
-end)
+makeToggle(movementCard, "INVISIBILITY / 隐身", 291, function(state) setLocalInvisible(state) return true end)
 
--- Infinite Jump Listener
 UIS.JumpRequest:Connect(function()
 	if not infiniteJump then return end
 	pcall(function()
 		local _, humanoid = getParts(LP)
-		if humanoid and humanoid.Health > 0 then
-			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-		end
+		if humanoid and humanoid.Health > 0 then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
 	end)
 end)
 
---========================================================
--- ESP SYSTEM
---========================================================
-
+-- ESP Page
 local espCard = createSection(espPage, "ESP // VISUAL SYSTEM", 145)
 local espEnabled = false
 local espObjects = {}
-local playerConnections = {}
 
 local function removeESP(player)
 	local data = espObjects[player]
 	if not data then return end
-	for _, obj in ipairs(data.objects or {}) do
-		pcall(function() obj:Destroy() end)
-	end
+	for _, obj in ipairs(data.objects or {}) do pcall(function() obj:Destroy() end) end
 	espObjects[player] = nil
 end
 
 local function createESP(player)
 	if not espEnabled or player == LP then return end
 	removeESP(player)
-
 	local character, humanoid, root = getParts(player)
 	if not character or not root then return end
 
 	local objects = {}
 	pcall(function()
-		local highlight = create("Highlight", {
+		table.insert(objects, create("Highlight", {
 			Name = "EV03_Highlight",
 			Adornee = character,
 			FillColor = C.RED,
@@ -1011,10 +797,9 @@ local function createESP(player)
 			FillTransparency = 0.82,
 			OutlineTransparency = 0,
 			DepthMode = Enum.HighlightDepthMode.AlwaysOnTop,
-		}, character)
-		table.insert(objects, highlight)
+		}, character))
 
-		local box = create("BoxHandleAdornment", {
+		table.insert(objects, create("BoxHandleAdornment", {
 			Name = "EV03_Box",
 			Adornee = root,
 			Size = Vector3.new(4, 6, 2),
@@ -1023,8 +808,7 @@ local function createESP(player)
 			Transparency = 0.25,
 			AlwaysOnTop = true,
 			ZIndex = 10,
-		}, root)
-		table.insert(objects, box)
+		}, root))
 
 		local billboard = create("BillboardGui", {
 			Name = "EV03_Info",
@@ -1069,17 +853,13 @@ local function createESP(player)
 		updateHealth()
 		humanoid.HealthChanged:Connect(updateHealth)
 	end)
-
 	espObjects[player] = {objects = objects}
 end
 
 makeToggle(espCard, "PLAYER ESP", 42, function(state)
 	espEnabled = state
-	if not state then
-		for player in pairs(espObjects) do removeESP(player) end
-	else
-		for _, player in ipairs(Players:GetPlayers()) do createESP(player) end
-	end
+	if not state then for player in pairs(espObjects) do removeESP(player) end
+	else for _, player in ipairs(Players:GetPlayers()) do createESP(player) end end
 	return true
 end)
 
@@ -1103,16 +883,37 @@ end)
 Players.PlayerRemoving:Connect(function(player) removeESP(player) end)
 
 --========================================================
--- HANDLERS & PANIC
+-- HOTKEYS & HANDLERS (FULL 12 MAPPINGS RESTORED)
 --========================================================
 
 local handlers = {}
-handlers.InfiniteJump = function() infiniteJump = not infiniteJump end
-handlers.Fly = function() flyEnabled = not flyEnabled end
+
+handlers.TeleportTarget = function()
+	local name = targetInput.Text:match("^%s*(.-)%s*$")
+	if name and name ~= "" then clientTeleport(name) else setStatus("PLEASE ENTER USERNAME", C.RED) end
+end
+
+handlers.FlingTarget = function()
+	local name = targetInput.Text:match("^%s*(.-)%s*$")
+	if name and name ~= "" then
+		local target, err = findTarget(name)
+		if target then clientFling({target}, flingPower) else setStatus(err or "PLAYER NOT FOUND", C.RED) end
+	else setStatus("PLEASE ENTER USERNAME", C.RED) end
+end
+
+handlers.FlingAll = function()
+	local all = {}
+	for _, p in ipairs(Players:GetPlayers()) do if p ~= LP then table.insert(all, p) end end
+	clientFling(all, flingPower)
+end
+
+handlers.InfiniteJump = function() infiniteJump = not infiniteJump setStatus("INFINITE JUMP: " .. tostring(infiniteJump), C.GREEN) end
+handlers.ApplyWalkSpeed = applyWalkSpeed
+handlers.Fly = function() setFlyState(not flyEnabled) end
+handlers.ApplyFlySpeed = applyFlySpeed
 handlers.Noclip = function() setLocalNoclip(not localNoclipEnabled) end
-handlers.ESP = function() espEnabled = not espEnabled end
+handlers.ESP = function() espEnabled = not espEnabled setStatus("ESP: " .. tostring(espEnabled), C.GREEN) end
 handlers.Invisible = function() setLocalInvisible(not localInvisibleEnabled) end
-handlers.ToggleMenu = function() gui.Enabled = not gui.Enabled end
 
 handlers.Panic = function()
 	infiniteJump = false
@@ -1128,12 +929,10 @@ handlers.Panic = function()
 	setStatus("PANIC RESET COMPLETE", C.RED)
 end
 
---========================================================
--- HOTKEYS PAGE
---========================================================
+handlers.ToggleMenu = function() gui.Enabled = not gui.Enabled end
 
+-- Hotkeys Page UI
 local hotkeyCard = createSection(hotkeyPage, "HOTKEYS // 快捷键分组", 605)
-
 create("TextLabel", {
 	Size = UDim2.new(1, -24, 0, 35),
 	Position = UDim2.fromOffset(12, 37),
@@ -1147,8 +946,13 @@ create("TextLabel", {
 }, hotkeyCard)
 
 local bindings = {
+	TeleportTarget = Enum.KeyCode.T,
+	FlingTarget = Enum.KeyCode.G,
+	FlingAll = Enum.KeyCode.H,
 	InfiniteJump = Enum.KeyCode.J,
+	ApplyWalkSpeed = Enum.KeyCode.U,
 	Fly = Enum.KeyCode.F,
+	ApplyFlySpeed = Enum.KeyCode.Y,
 	Noclip = Enum.KeyCode.N,
 	ESP = Enum.KeyCode.E,
 	Invisible = Enum.KeyCode.V,
@@ -1157,8 +961,13 @@ local bindings = {
 }
 
 local bindingRows = {
+	{"TeleportTarget", "指定玩家传送"},
+	{"FlingTarget", "指定玩家甩飞"},
+	{"FlingAll", "全体玩家甩飞"},
 	{"InfiniteJump", "无限跳跃"},
+	{"ApplyWalkSpeed", "应用移动速度"},
 	{"Fly", "摄像机飞行开关"},
+	{"ApplyFlySpeed", "应用飞行速度"},
 	{"Noclip", "穿墙开关"},
 	{"ESP", "ESP 开关"},
 	{"Invisible", "隐身开关"},
@@ -1195,9 +1004,9 @@ for index, row in ipairs(bindingRows) do
 		TextXAlignment = Enum.TextXAlignment.Left,
 	}, hotkeyCard)
 
-	local bindButton = makeButton(hotkeyCard, bindings[action] and bindings[action].Name or "UNBOUND", 0.63, y, 0.34, 32, function()
+	local bindButton = makeButton(hotkeyCard, "UNBOUND", 0.63, y, 0.34, 32, function()
 		listeningAction = action
-		-- 动态更新当前按钮文字
+		setStatus("REBINDING: " .. label, C.YELLOW)
 	end)
 	bindButtons[action] = bindButton
 end
@@ -1205,11 +1014,10 @@ end
 makeButton(hotkeyCard, "PANIC // DISABLE ALL", 0, 555, 1, 30, handlers.Panic)
 
 --========================================================
--- ABOUT PAGE
+-- ABOUT PAGE & INPUT LISTENER
 --========================================================
 
 local aboutCard = createSection(aboutPage, "ABOUT // 身份组", 285)
-
 create("TextLabel", {
 	Size = UDim2.new(1, -32, 0, 225),
 	Position = UDim2.fromOffset(16, 42),
@@ -1218,8 +1026,7 @@ create("TextLabel", {
 		"PROJECT INFORMATION",
 		"",
 		"项目名称：EV03 CONTROL",
-		"项目版本：V3.8 (Standalone Edition)",
-		"项目类型：Executor Standalone Script",
+		"项目版本：V3.8 (Full Hotkeys Edition)",
 		"运行模式：100% 纯客户端本地运行",
 		"",
 		"CREATOR IDENTITY",
@@ -1235,10 +1042,6 @@ create("TextLabel", {
 	TextYAlignment = Enum.TextYAlignment.Top,
 	TextWrapped = true,
 }, aboutCard)
-
---========================================================
--- DEFAULT PAGE SELECTOR & UI DRAG
---========================================================
 
 local function selectPage(name)
 	if not pages[name] then return end
@@ -1258,16 +1061,12 @@ dragArea.InputBegan:Connect(function(input)
 		dragging = true
 		dragStart = input.Position
 		startPosition = main.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then dragging = false end
-		end)
+		input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
 	end
 end)
 
 dragArea.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
-	end
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
 end)
 
 UIS.InputChanged:Connect(function(input)
@@ -1276,7 +1075,6 @@ UIS.InputChanged:Connect(function(input)
 	main.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
 end)
 
--- Minimize / Close
 local minimized = false
 local originalSize = main.Size
 minimizeButton.MouseButton1Click:Connect(function()
@@ -1297,7 +1095,7 @@ end)
 
 closeButton.MouseButton1Click:Connect(function() gui.Enabled = false end)
 
--- Hotkey Listeners
+-- Hotkey Input Interceptor
 UIS.InputBegan:Connect(function(input, processed)
 	if listeningAction then
 		if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
@@ -1333,10 +1131,10 @@ UIS.InputBegan:Connect(function(input, processed)
 end)
 
 refreshBindingLabels()
-setStatus("EV03 STANDALONE V3.8 READY", C.GREEN)
+setStatus("EV03 FULL HOTKEYS V3.8 READY", C.GREEN)
 
 print("======================================")
-print(" EV03 CONTROL V3.8 - STANDALONE")
+print(" EV03 CONTROL V3.8 - FULL HOTKEYS")
 print(" CREATOR: 阿叶ev03")
-print(" CLIENT-SIDE EDITION LOADED SUCCESSFULLY")
+print(" ALL 12 SHORTCUTS RESTORED & READY")
 print("======================================")
