@@ -483,7 +483,7 @@ addNavigation("HOTKEYS", "Hotkeys", "⌨")
 addNavigation("ABOUT", "About", "ⓘ")
 
 --========================================================
--- CORE FEATURES: 纯客户端本地实现
+-- CORE FEATURES: 纯客户端本地实现 (NOCLIP, INVISIBLE, FLING, TELEPORT)
 --========================================================
 
 -- 1. NOCLIP (穿墙) 本地实现
@@ -564,7 +564,7 @@ local function localTeleportToTarget(targetName)
 	end)
 end
 
--- 4. FLING (甩飞) 客户端本地物理冲撞模拟实现
+-- 4. FLING (甩飞) 客户端本地物理冲撞与绕转模拟实现（对标服务端逻辑）
 local function localFlingTarget(targetName, power)
 	local target, err = findTarget(targetName)
 	if not target then
@@ -658,7 +658,7 @@ create("TextLabel", {
 -- PLAYER PAGE
 --========================================================
 
-local playerCard = createSection(playerPage, "PLAYER // MANAGEMENT", 210)
+local playerCard = createSection(playerPage, "PLAYER // MANAGEMENT", 205)
 local targetInput = makeInput(playerCard, "Enter exact Roblox Username...", 0, 39, 1, 36, "")
 
 create("TextLabel", {
@@ -825,7 +825,7 @@ local function setupFly()
 				if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cf.RightVector end
 				if UIS:IsKeyDown(Enum.KeyCode.D) then move += cf.RightVector end
 				if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.yAxis end
-				if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.yAxis end
+				if UIS:IsKeyDown(Enum.KeyCode.LeftControl) or UIS:IsKeyDown(Enum.KeyCode.RightControl) then move -= Vector3.yAxis end
 			end
 			if move.Magnitude > 1 then move = move.Unit end
 			if flyVelocity then flyVelocity.VectorVelocity = move * flySpeed end
