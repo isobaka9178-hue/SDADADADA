@@ -97,7 +97,7 @@ local function getParts(player)
 	return char, hum, root
 end
 
--- 玩家前缀匹配查找
+-- 玩家前缀精准匹配查找
 local function findTarget(prefix)
 	if typeof(prefix) ~= "string" then
 		return nil, "INVALID USERNAME"
@@ -458,7 +458,7 @@ local function addNavigation(name, label, symbol)
 			nav.BackgroundColor3 = selected and C.DARK_RED or C.SIDEBAR
 			nav.TextColor3 = selected and C.WHITE or C.GRAY
 		end
-		setStatus("PAGE: " + name)
+		setStatus("PAGE: " .. name)
 	end)
 
 	return button
@@ -483,7 +483,7 @@ addNavigation("HOTKEYS", "Hotkeys", "⌨")
 addNavigation("ABOUT", "About", "ⓘ")
 
 --========================================================
--- CORE FEATURES: 纯客户端本地实现 (NOCLIP, INVISIBLE, FLING, TELEPORT)
+-- CORE FEATURES: 纯客户端本地实现
 --========================================================
 
 -- 1. NOCLIP (穿墙) 本地实现
@@ -589,7 +589,6 @@ local function localFlingTarget(targetName, power)
 			local speed = 15000 * (power or 5)
 			local elapsed = 0
 			
-			-- 临时高速旋转冲撞目标以触发 Roblox 物理引擎 Fling 效果
 			local connection
 			connection = RunService.Heartbeat:Connect(function(dt)
 				elapsed = elapsed + dt
@@ -722,7 +721,7 @@ makeButton(playerCard, "FLING ALL", 0.68, 145, 0.32, 40, function()
 end)
 
 --========================================================
--- MOVEMENT PAGE (CAMERA FLY / SPEED / NOCLIP / INVISIBLE)
+-- MOVEMENT PAGE
 --========================================================
 
 local movementCard = createSection(movementPage, "MOVEMENT // CAMERA FLY / SPEED / NOCLIP", 365)
@@ -730,11 +729,6 @@ local movementCard = createSection(movementPage, "MOVEMENT // CAMERA FLY / SPEED
 local infiniteJump = false
 local flyEnabled = false
 local flySpeed = 80
-
-local setJumpState
-local setFlyState
-local setNoclipState
-local setInvisibleState
 
 makeToggle(movementCard, "INFINITE JUMP", 42, function(state)
 	infiniteJump = state
@@ -766,7 +760,7 @@ makeButton(movementCard, "APPLY FLY SPEED", 0.65, 141, 0.35, 36, function()
 	setStatus("FLY SPEED: " .. tostring(speed), C.GREEN)
 end)
 
--- CAMERA FLY ENGINE (Standalone Client)
+-- CAMERA FLY ENGINE
 local flyAttachment, flyVelocity, flyOrientation, flyConnection, flyHumanoid, oldAutoRotate
 
 local function cleanupFly()
@@ -864,7 +858,6 @@ makeToggle(movementCard, "INVISIBILITY / 隐身", 291, function(state)
 	return setLocalInvisible(state)
 end)
 
--- Infinite Jump Listener
 UIS.JumpRequest:Connect(function()
 	if not infiniteJump then return end
 	pcall(function()
@@ -882,7 +875,6 @@ end)
 local espCard = createSection(espPage, "ESP // VISUAL SYSTEM", 145)
 local espEnabled = false
 local espObjects = {}
-local playerConnections = {}
 
 local function cleanupESP(data)
 	if not data then return end
@@ -1126,7 +1118,6 @@ UIS.InputEnded:Connect(function(input)
 	end
 end)
 
--- Minimize & Close
 local minimized = false
 local originalSize = main.Size
 
@@ -1150,7 +1141,6 @@ closeButton.MouseButton1Click:Connect(function()
 	gui.Enabled = false
 end)
 
--- Global Hotkey Listener
 UIS.InputBegan:Connect(function(input, processed)
 	if listeningAction then
 		if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
