@@ -1,5 +1,5 @@
 --========================================================
--- EV03 CONTROL V3.8 - EXECUTOR STANDALONE EDITION (FULL HOTKEYS)
+-- EV03 CONTROL V3.8 - EXECUTOR STANDALONE EDITION (FULL 12 HOTKEYS)
 -- Creator: 阿叶ev03
 -- Location: Standalone Executor Script (Client-Side)
 --========================================================
@@ -126,7 +126,7 @@ create("TextLabel", {
 	Size = UDim2.new(1, -20, 0, 15),
 	Position = UDim2.fromOffset(16, 34),
 	BackgroundTransparency = 1,
-	Text = "STANDALONE FULL HOTKEYS // V3.8",
+	Text = "STANDALONE 12 HOTKEYS // V3.8",
 	TextColor3 = C.GRAY,
 	TextSize = 9,
 	Font = Enum.Font.Code,
@@ -691,7 +691,9 @@ local function setupFly()
 	if not character then return false end
 	local success = pcall(function()
 		root.AssemblyAngularVelocity = Vector3.zero
-		flyAttachment = Instance.new("Attachment", root, "EV03_FlyAttachment")
+		flyAttachment = Instance.new("Attachment", root)
+		flyAttachment.Name = "EV03_FlyAttachment"
+		
 		flyVelocity = Instance.new("LinearVelocity", root)
 		flyVelocity.Name = "EV03_FlyVelocity"
 		flyVelocity.Attachment0 = flyAttachment
@@ -883,7 +885,7 @@ end)
 Players.PlayerRemoving:Connect(function(player) removeESP(player) end)
 
 --========================================================
--- HOTKEYS & HANDLERS (FULL 12 MAPPINGS RESTORED)
+-- HOTKEYS & HANDLERS (FULL 12 MAPPINGS RESTORED & SCROLLABLE)
 --========================================================
 
 local handlers = {}
@@ -931,13 +933,13 @@ end
 
 handlers.ToggleMenu = function() gui.Enabled = not gui.Enabled end
 
--- Hotkeys Page UI
-local hotkeyCard = createSection(hotkeyPage, "HOTKEYS // 快捷键分组", 605)
+-- Hotkeys Page UI (Increased card height to 700 for full visibility)
+local hotkeyCard = createSection(hotkeyPage, "HOTKEYS // 快捷键分组 (共12个)", 700)
 create("TextLabel", {
 	Size = UDim2.new(1, -24, 0, 35),
 	Position = UDim2.fromOffset(12, 37),
 	BackgroundTransparency = 1,
-	Text = "点击右侧按钮，再按下想绑定的新按键。\n重复按键会自动解除之前的绑定。",
+	Text = "点击右侧按钮，再按下想绑定的新按键。\n(提示：页面可上下滚动查看全部 12 个功能)",
 	TextColor3 = C.GRAY,
 	TextSize = 10,
 	Font = Enum.Font.Code,
@@ -1011,7 +1013,7 @@ for index, row in ipairs(bindingRows) do
 	bindButtons[action] = bindButton
 end
 
-makeButton(hotkeyCard, "PANIC // DISABLE ALL", 0, 555, 1, 30, handlers.Panic)
+makeButton(hotkeyCard, "PANIC // DISABLE ALL", 0, 635, 1, 32, handlers.Panic)
 
 --========================================================
 -- ABOUT PAGE & INPUT LISTENER
@@ -1131,10 +1133,10 @@ UIS.InputBegan:Connect(function(input, processed)
 end)
 
 refreshBindingLabels()
-setStatus("EV03 FULL HOTKEYS V3.8 READY", C.GREEN)
+setStatus("EV03 12 HOTKEYS READY", C.GREEN)
 
 print("======================================")
-print(" EV03 CONTROL V3.8 - FULL HOTKEYS")
+print(" EV03 CONTROL V3.8 - FULL 12 HOTKEYS")
 print(" CREATOR: 阿叶ev03")
-print(" ALL 12 SHORTCUTS RESTORED & READY")
+print(" ALL SHORTCUTS LOADED & SCROLLABLE")
 print("======================================")
